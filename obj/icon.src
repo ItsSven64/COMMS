@@ -23,5 +23,5 @@ ___icon:
 	db	$FF, $FF, $FF, $FF, $FE, $B5, $B5, $B6, $B6, $B5, $B5, $FE, $FF, $FF, $FF, $FF
 	public ___description
 ___description:
-	db	"CE C Toolchain Demo", 0
+	db	"Handles communication between TI-84 and Rasp Pi pico", 0
 ___prgm_init:

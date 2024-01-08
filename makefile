@@ -2,9 +2,9 @@
 # Makefile Options
 # ----------------------------
 
-NAME = DEMO
+NAME = MAINCOM
 ICON = icon.png
-DESCRIPTION = "CE C Toolchain Demo"
+DESCRIPTION = "Handles communication between TI-84 and Rasp Pi pico"
 COMPRESSED = NO
 
 CFLAGS = -Wall -Wextra -Oz

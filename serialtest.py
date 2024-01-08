@@ -2,20 +2,20 @@ from serial import *
 
 connected = False
 
-
 while not connected:
     try:    
-        #ser = Serial("COM4")
+        print("sending start to COM6")
+        ser = Serial("COM6")
         
-        #print(ser.read())
-        continue
+        ser.write(b"start")
     except SerialException:
         continue
     else:        
         print("connect")
+        ser.write(b"start")
         connected = True
 
+print("Now reading")
 while True:
-    #print(ser.read())
-    break
+    print(ser.read())
 print("Stopping")
