@@ -2,6 +2,11 @@ from serial import *
 
 connected = False
 
+def Handle_input(input, ser):
+    match input:
+        case 'start':
+            print("STARTED")
+
 while not connected:
     try:    
         print("sending start to COM6")
@@ -16,6 +21,5 @@ while not connected:
         connected = True
 
 print("Now reading")
-while True:
-    print(ser.read())
-print("Stopping")
+input = ser.read_until(expected=b'\n')
+

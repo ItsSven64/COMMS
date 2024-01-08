@@ -95,6 +95,7 @@ int main(void){
 
     /*Nu wordt het leuk*/
     char in_buf[] = "     \0";
+    char start[7] = "start";
     printf("%s", "Empty in_buf is:");
     printf("%s", in_buf);
     do{
@@ -104,12 +105,15 @@ int main(void){
         if(has_srl_device){
             printf("%s", "Waiting for start");
             if (blocking_read(in_buf, 5) != -1){
-                printf("Start received, sending str1");
+                printf("Received, sending str1");
                 string_t *input = os_GetStringData(OS_VAR_STR1, NULL);
                 srl_Write(&srl, input->data, input->len);
                 srl_Write(&srl, EOFstr, sizeof EOFstr);
-                usb_Cleanup();
-                break;
+                if (strcmp(in_buf, start)){
+                    srl_Write(&srl, start, 7);
+                    srl_Write(&srl, EOFstr, 2);
+                    break;
+                }
                 
             }
         }
