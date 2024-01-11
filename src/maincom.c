@@ -81,6 +81,19 @@ int blocking_read(void *data, int len) {
     return recv_len;
 }
 
+char read_until(srl_device_t srl, char stopper){
+    char next_char[1];
+    signed int check;
+    char in_buf[24] ="";
+    check = srl_Read(&srl, next_char, 1);
+    if (check < 0) return -1;
+    while (next_char != stopper){
+        strncat(in_buf, next_char, 1);
+    }
+    strncat(in_buf, "\x00", 1);
+    return in_buf;
+}
+
 int main(void){
     os_ClrHome();
     const usb_standard_descriptors_t *desc = srl_GetCDCStandardDescriptors();
@@ -95,26 +108,23 @@ int main(void){
 
     /*Nu wordt het leuk*/
     char in_buf[] = "     \0";
-    char start[7] = "start";
-    printf("%s", "Empty in_buf is:");
-    printf("%s", in_buf);
+    char start[7] = "start\00";
+    char stop[7] = "stop\00";
+    char stopper = EOF;
     do{
         kb_Scan();
         usb_HandleEvents();
         //srl_Write(&srl, "start", 5);
         if(has_srl_device){
-            printf("%s", "Waiting for start");
-            if (blocking_read(in_buf, 5) != -1){
-                printf("Received, sending str1");
-                string_t *input = os_GetStringData(OS_VAR_STR1, NULL);
-                srl_Write(&srl, input->data, input->len);
-                srl_Write(&srl, EOFstr, sizeof EOFstr);
-                if (strcmp(in_buf, start)){
-                    srl_Write(&srl, start, 7);
-                    srl_Write(&srl, EOFstr, 2);
-                    break;
-                }
-                
+            string_t *input = os_GetStringData(OS_VAR_STR1, NULL);
+            srl_Write(&srl, input->data, input->len);
+            srl_Read(&srl, in_buf, sizeof in_buf);
+            if(!strcmp(in_buf, stop)){
+                srl_Read(&srl, in_buf, 24);
+                printf("%s", in_buf);
+            }    
+            else {
+                srl_Write(&srl, "-ack\x00", 6);
             }
         }
         
@@ -122,5 +132,6 @@ int main(void){
     }
     while (!kb_IsDown(kb_KeyClear));
     usb_Cleanup();
+    return 0;
 
 }
