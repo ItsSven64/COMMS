@@ -1,0 +1,26 @@
+TI-84       RASP PI     SERVER
+start   
+            start
+            creds
+creds
+            start
+                        start
+------------SEND---------------
+start       (stop sending)
+msg         
+stop        (resume sending)
+            ack
+            start>      (stop sending)
+            msg>         
+            stop>       (resume sending)    
+                        ack
+------------RECV---------------                        
+            (stop send) start
+                        msg
+            (resume)    stop
+(stop)      <start>     (stop sending)
+            <msg
+(start)     <stop>      (resume)
+------------LOOP---------------
+
+       d

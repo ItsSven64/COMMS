@@ -107,9 +107,9 @@ int main(void){
     /*Hierboven is handling shit, niet aankomen pls*/
 
     /*Nu wordt het leuk*/
-    char in_buf[] = "     \0";
-    char start[7] = "start\00";
-    char stop[7] = "stop\00";
+    char in_buf[] = "     \x0";
+    char start[7] = "start\x00";
+    char stop[7] = "stop\x00";
     char stopper = EOF;
     do{
         kb_Scan();
