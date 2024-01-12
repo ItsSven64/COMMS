@@ -46,12 +46,12 @@ def recv_msg():
     return msg.decode()
     
 def send_udp(msg):   
-    UDPClientSocket.sendto(startMSG, serverAddressPort)
-    UDPClientSocket.sendto(msg.encode(), serverAddressPort)
-    UDPClientSocket.sendto(stopMSG, serverAddressPort)
+    TCP.sendto(startMSG, serverAddressPort)
+    TCP.sendto(msg.encode(), serverAddressPort)
+    TCP.sendto(stopMSG, serverAddressPort)
 
 def recv_udp():
-    msgFromServer = UDPClientSocket.recvfrom(bufferSize)
+    msgFromServer = TCP.recvfrom(bufferSize)
     return msgFromServer.decode()
     
         
@@ -59,8 +59,9 @@ if __name__ == '__main__':
     blocked = False
     Check_communication()
     Get_info()
-    UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClientSocket.settimeout(0.2)
+    TCP = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
+    TCP.connect(("
+    TCP.settimeout(0.2)
     
     while True:
         a = ser.read(7)
@@ -83,6 +84,7 @@ if __name__ == '__main__':
         b = recv_UDP()
         if b is '+start' and not blocked:
             #read server input and store it into a buffer
+            
             
         if b is '+stop' and blocked:
             #start writing the message to TI
