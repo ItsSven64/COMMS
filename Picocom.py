@@ -1,6 +1,6 @@
 import socket
 import network
-from serial import *
+from machine import UART, pin
 from time import sleep
 
 
@@ -17,13 +17,12 @@ def Check_communication():
     global ser
     connected = False
     while not connected:
-        try:    
-            ser = Serial("COM6", 9600, timeout=0.2)
-            
-        except SerialException:
-            continue
-        else: 
-            connected = True
+        UART(0, baudrate=9600, tx=Pin(4), rx=Pin(5))
+        uart.init(bits=8, parity=None, stop=2)
+        uart.write(startMSG)
+        if uart.read(7).decode() == startMSG: connected = True
+        else: sleep(0.5)
+        
 
 def Get_info():
     global serverAddressPort
