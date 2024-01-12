@@ -1,6 +1,7 @@
 import socket
 import network
-from machine import UART, pin
+import select
+import sys
 from time import sleep
 
 
@@ -14,13 +15,19 @@ startMSG = b'+start\x00'
 stopMSG = b'+stop\x00'
 
 def Check_communication():
+    
     global ser
     connected = False
+    poll_obj = select.poll()
+    poll_obj.register(sys.stdin, select.POLLIN)
+    
     while not connected:
-        UART(0, baudrate=9600, tx=Pin(4), rx=Pin(5))
-        uart.init(bits=8, parity=None, stop=2)
-        uart.write(startMSG)
-        if uart.read(7).decode() == startMSG: connected = True
+        poll_results = poll_obj.poll(0.2)
+        
+        if poll_results:
+            data = sys.stdin.readline('\x00').strip()
+            sys.stdout.write("received data: " + data + "\x00")
+            
         else: sleep(0.5)
         
 
