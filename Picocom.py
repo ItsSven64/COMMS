@@ -1,7 +1,9 @@
 import socket
 import network
-from machine import UART, pin
+from machine import UART
+from machine import Pin
 from time import sleep
+import sys
 
 
 msgFromClient       = "Hello UDP Server"
@@ -17,10 +19,10 @@ def Check_communication():
     global ser
     connected = False
     while not connected:
-        UART(0, baudrate=9600, tx=Pin(4), rx=Pin(5))
+        uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))
         uart.init(bits=8, parity=None, stop=2)
         uart.write(startMSG)
-        if uart.read(7).decode() == startMSG: connected = True
+        if uart.read(7) == startMSG: connected = True
         else: sleep(0.5)
         
 
@@ -30,7 +32,7 @@ def Get_info():
     
     done = False
     while not done:
-        ser.write(b'+givecreds\x00')
+        sys.stdout.write(b'+givecreds\x00')
         from_ti = ser.read_until(expected=b'\x00')
         from_ti = from_ti.decode()
         creds = from_ti.split()
@@ -42,6 +44,7 @@ def Get_info():
 
 def recv_msg():
     ser.write(b'+start\x00')
+    sys.stdout.write("+start\x00")
     msg = ser.read_until(b'\x00')
     return msg.decode()
     

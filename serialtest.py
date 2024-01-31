@@ -1,4 +1,5 @@
 from serial import *
+from time import sleep
 
 connected = False
 
@@ -21,8 +22,10 @@ def Check_communication():
     connected = False
     while not connected:
         try:    
-            print("sending start to COM6")
-            ser = Serial("COM6")
+            print("sending start to COM9")
+            ser = Serial("COM9")
+            sleep(0.5)
+
             
         except SerialException:
             continue
