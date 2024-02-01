@@ -1,6 +1,7 @@
 from machine import Pin
 from utime import sleep
 import network as net
+import urequests as ureq
 
 # use onboard LED which is controlled by Pin 25
 # on a Pico W the onboad lLED is accessed differently,
@@ -25,13 +26,32 @@ def off():
 
 def wifi_connect(ssid, password):
     global wlan
+    print(ssid)
+    print(password)
     wlan = net.WLAN(net.STA_IF)
     wlan.active(True)
     wlan.connect(ssid, password)
     print(wlan.status())
-    while wlan.isconnected() == False:
+        
+    while not wlan.isconnected():
         print('Waiting for connection...')
-        sleep(1)
+        print(wlan.status())
+        if wlan.isconnected(): print("CONNECTED")
+        led.off()
+        sleep(0.5)
+        led.on()
+        sleep(0.5)
+    print("Connected")
+    led.on()
+    sleep(0.2)
+    led.off()
+    sleep(0.2)
+    led.on()
+    
+def google_ping():
+    r = ureq.get("http://www.google.com")
+    print(r.content)
+    r.close()
 
 def get_status():
     print(wlan.status())
