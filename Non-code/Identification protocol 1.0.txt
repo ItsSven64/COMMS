@@ -1,0 +1,80 @@
+IDENTIFICATION PROTOCOL 1.0 (IPv1)
+
+4 digit ID code: (0000-9999)
+
+Assigned at initialization of product (Raspberry pi) by putting School ID through algortihm
+(when im talking about wiretappers i mean people who have illegally acquired access to the system. 
+The internet protocol uses TLS, which is inherently secure)
+
+Reasons:
+    1. We want to give clients a way to communicate semi-anonymously
+    2. We also want to give clients a easy way to tell each other apart, without relying on a trust-system
+
+Description:
+    1. Users can enter School ID, and get the ID of the person who they want to message
+    2. Wiretappers can't decipher who's talking, unless they know the list of ID's with names
+
+Examples:
+    Alice has School ID 007000 (7000)
+    Bob has School ID 007001 (7001)
+
+    Alice wants to address Bob by including his ID in her message (i.e. hyd? (BobID))
+    Alice knows Bob's School ID
+    Alice enters Bob's School ID inside the algorithm, and she gets the answer
+    Alice places the ID inside the message and sends it.
+
+Vulnerabilies:
+    A potential wiretapper can still know the same two people are talking
+    
+    Example (through messages, [School ID] is the encrypted ID):
+        [7000] hyd?
+        [7001] im fine
+        [7000] what lesson?
+        [7001] English
+        [7000] nice i have Maths
+        [7001] see you soon
+
+        We now know that [7001] and [7000] are in a certain lesson, and know each other.
+        Of course we can change the IDs, but it's impossible to communicate this to the other users.
+    
+    A wiretapper can also use the algorithm to find out if a certain student uses the system.
+
+Possible solutions:
+    1. Make the algortihm private
+        The algorithm can only be used by certified staff, or the code itself. 
+        You can include the algortihm inside the compiled assembly code, to append the users School ID to the message
+        To get the ID you have to acquire it in person, or via the message service (not recommended)
+    2. Make the algortihm completely public
+        The algortihm is publicly available, and is trivial
+        This way we force users to implement their own security system, and keep free of responsibilty
+        The ID is purely for COMMS internaly, and future updates may replace the ID with a name in a contact book
+    3. End-to-end algorithm:
+        The ID gets encrypted with a key at both ends, and users have to keep track of their own ID-name combinations in a register
+        The register should be easy to completely wipe and reset.
+
+        Schematic:
+
+        Alice   ->  Server  ->  Bob
+        Lookup Bob's ID
+        7001
+                -> [7001]
+                            -> received message from [7000]
+                               Bob knows Alice's (encrypted) ID because they exchanged it
+                               Bob sees [7000], and knows it's Alice
+
+                            <- 7000
+                <- [7000]
+        Recv from [7001]
+        Repeat
+
+        The encrypted ID here mainly gets used for internal server processing.
+        A wiretapper CAN send messages to a known School ID, but it is up to the receiver to verify it's them
+        This can be done by checking the sender encrypted ID. If the receiver never seen that ID, they should be warned
+
+        They can verify the ID by rendez-vous, but this should be done on their own responsibilty.
+
+Centralization:
+    Because the staff knows the algorithm (they wrote it) they CAN know who belongs to which ID. 
+    The staff should never misuse this power, and keep it secret that they can use this. 
+    The algorithm should be removed from repo's and not made public. (if it is meant to keep secret)
+
