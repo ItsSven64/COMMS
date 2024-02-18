@@ -6,14 +6,14 @@
 #include <string.h>
 #include <tice.h>
 #include <ti/vars.h>
+#include <ti/tokens.h>
+#include <fileioc.h>
 
-srl_device_t srl;
+srl_device_t srl_send;
 
-bool has_srl_device = false;
+bool has_srl_device_send = false;
 
-uint8_t srl_buf[512];
-
-char EOFstr[2] = "\n";
+uint8_t srl_buf_send[512];
 
 static usb_error_t handle_usb_event(usb_event_t event, void *event_data,
                                     usb_callback_data_t *callback_data __attribute__((unused))) {
@@ -24,7 +24,6 @@ static usb_error_t handle_usb_event(usb_event_t event, void *event_data,
     /* Enable newly connected devices */
     if(event == USB_DEVICE_CONNECTED_EVENT && !(usb_GetRole() & USB_ROLE_DEVICE)) {
         usb_device_t device = event_data;
-        printf("device connected\n");
         usb_ResetDevice(device);
     }
 
@@ -32,7 +31,7 @@ static usb_error_t handle_usb_event(usb_event_t event, void *event_data,
     if(event == USB_HOST_CONFIGURE_EVENT || (event == USB_DEVICE_ENABLED_EVENT && !(usb_GetRole() & USB_ROLE_DEVICE))) {
 
         /* If we already have a serial device, ignore the new one */
-        if(has_srl_device) return USB_SUCCESS;
+        if(has_srl_device_send) return USB_SUCCESS;
 
         usb_device_t device;
         if(event == USB_HOST_CONFIGURE_EVENT) {
@@ -45,92 +44,53 @@ static usb_error_t handle_usb_event(usb_event_t event, void *event_data,
         }
 
         /* Initialize the serial library with the newly attached device */
-        srl_error_t error = srl_Open(&srl, device, srl_buf, sizeof srl_buf, SRL_INTERFACE_ANY, 9600);
+        srl_error_t error = srl_Open(&srl_send, device, srl_buf_send, sizeof srl_buf_send, SRL_INTERFACE_ANY, 9600);
         if(error) {
             /* Print the error code to the homescreen */
-            printf("Error %d initting serial\n", error);
             return USB_SUCCESS;
         }
 
-        printf("serial initialized\n");
 
-        has_srl_device = true;
+        has_srl_device_send = true;
     }
 
     if(event == USB_DEVICE_DISCONNECTED_EVENT) {
         usb_device_t device = event_data;
-        if(device == srl.dev) {
-            printf("device disconnected\n");
-            srl_Close(&srl);
-            has_srl_device = false;
+        if(device == srl_send.dev) {
+            srl_Close(&srl_send);
+            has_srl_device_send = false;
         }
     }
 
     return USB_SUCCESS;
 }
 
-int blocking_read(void *data, int len) {
-    int recv_len = 0;
-    do
-    { 
-        usb_HandleEvents();
-        int read_len = srl_Read(&srl, data + recv_len, len - recv_len);
-        if (read_len < 0) { return -1; }
-        recv_len += read_len;
-    } while (recv_len < len);
-    return recv_len;
-}
-
-char read_until(srl_device_t srl, char stopper){
-    char next_char[1];
-    signed int check;
-    char in_buf[24] ="";
-    check = srl_Read(&srl, next_char, 1);
-    if (check < 0) return -1;
-    while (next_char != stopper){
-        strncat(in_buf, next_char, 1);
-    }
-    strncat(in_buf, "\x00", 1);
-    return in_buf;
-}
-
-int main(void){
+int main_send(void){
     os_ClrHome();
     const usb_standard_descriptors_t *desc = srl_GetCDCStandardDescriptors();
     usb_error_t usb_error = usb_Init(handle_usb_event, NULL, desc, USB_DEFAULT_INIT_FLAGS);
+    
     if(usb_error) {
        usb_Cleanup();
-       printf("usb init error %u\n", usb_error);
        do kb_Scan(); while(!kb_IsDown(kb_KeyClear));
        return 1;
     }
     /*Hierboven is handling shit, niet aankomen pls*/
 
     /*Nu wordt het leuk*/
-    char in_buf[] = "     \x0";
-    char start[7] = "start\x00";
-    char stop[7] = "stop\x00";
-    char stopper = EOF;
-    do{
-        kb_Scan();
-        usb_HandleEvents();
-        //srl_Write(&srl, "start", 5);
-        if(has_srl_device){
-            string_t *input = os_GetStringData(OS_VAR_STR1, NULL);
-            srl_Write(&srl, input->data, input->len);
-            srl_Read(&srl, in_buf, sizeof in_buf);
-            if(!strcmp(in_buf, stop)){
-                srl_Read(&srl, in_buf, 24);
-                printf("%s", in_buf);
-            }    
-            else {
-                srl_Write(&srl, "-ack\x00", 6);
-            }
-        }
-        
-        kb_Scan();
+    //dit is com_send, dus we sturen alleen STR0
+    kb_Scan();
+    usb_HandleEvents();
+    if(has_srl_device_send){
+        char* input[44];
+        ti_RclVar(OS_TYPE_STR, OS_VAR_STR0, (void**)&input);
+        srl_Write(&srl_send, input, 44);
     }
-    while (!kb_IsDown(kb_KeyClear));
+    else{
+        ti_SetVar(OS_TYPE_STR, OS_VAR_STR1, "FAIL (1)");
+    }
+        
+    kb_Scan();
     usb_Cleanup();
     return 0;
 

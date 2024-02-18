@@ -1,128 +1,54 @@
 	section	.text,"ax",@progbits
 	assume	adl = 1
 	section	.text,"ax",@progbits
-	public	_blocking_read
-_blocking_read:
+	public	_assign_string
+_assign_string:
 	ld	hl, -3
 	call	__frameset
-	or	a, a
-	sbc	hl, hl
-	ld	(ix - 3), hl
-BB0_1:
-	call	_usb_HandleEvents
-	ld	iy, (ix + 6)
-	ld	de, (ix - 3)
-	add	iy, de
 	ld	hl, (ix + 9)
+	ld	(ix - 3), hl
+	push	hl
+	call	_strlen
+	push	hl
+	pop	de
+	pop	hl
+	ld	bc, 1
+	push	de
+	pop	hl
 	or	a, a
-	sbc	hl, de
-	push	hl
-	push	iy
-	ld	hl, _srl
-	push	hl
-	call	_srl_Read
+	sbc	hl, bc
+	call	pe, __setflag
+	jp	p, BB0_2
 	ld	de, 0
-	push	hl
-	pop	iy
-	pop	hl
-	pop	hl
-	pop	hl
-	lea	hl, iy
-	or	a, a
-	sbc	hl, de
-	call	pe, __setflag
-	jp	m, BB0_3
-	ld	de, (ix - 3)
-	add	iy, de
-	lea	hl, iy
-	ld	de, (ix + 9)
-	or	a, a
-	sbc	hl, de
-	call	pe, __setflag
-	ld	(ix - 3), iy
-	jp	m, BB0_1
-	jr	BB0_4
+BB0_2:
+	ld	iy, (ix + 6)
+	lea	iy, iy + 2
 BB0_3:
-	ld	iy, -1
-BB0_4:
-	lea	hl, iy
-	ld	sp, ix
+	push	de
+	pop	hl
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	jr	z, BB0_5
+	ld	hl, (ix - 3)
+	ld	a, (hl)
+	ld	(iy), a
+	inc	hl
+	ld	(ix - 3), hl
+	inc	iy
+	dec	de
+	jr	BB0_3
+BB0_5:
+	pop	hl
 	pop	ix
 	ret
-	section	.text,"ax",@progbits
-
-	section	.text,"ax",@progbits
-	public	_read_until
-_read_until:
-	ld	hl, -31
-	call	__frameset
-	lea	iy, ix - 1
-	lea	hl, ix - 25
-	ld	(ix - 25), 0
-	push	hl
-	pop	de
-	inc	de
-	ld	bc, 23
-	ld	(ix - 31), hl
-	ldir
-	ld	hl, 1
-	push	hl
-	ld	(ix - 28), iy
-	push	iy
-	pea	ix + 6
-	call	_srl_Read
-	pop	de
-	pop	de
-	pop	de
-	ld	de, 0
-	or	a, a
-	sbc	hl, de
-	call	pe, __setflag
-	jp	p, BB1_2
-	ld	l, -1
-	jr	BB1_4
-BB1_2:
-	ld	a, (ix + 66)
-	ld	l, a
-	rlc	l
-	sbc	hl, hl
-	push	hl
-	pop	de
-	ld	e, a
-	ld	bc, (ix - 28)
-	push	bc
-	pop	hl
-	or	a, a
-	sbc	hl, de
-	jr	nz, BB1_5
-	ld	hl, (ix - 31)
-BB1_4:
-	ld	a, l
-	ld	sp, ix
-	pop	ix
-	ret
-BB1_5:
-	ld	hl, 1
-	push	hl
-	push	bc
-	ld	hl, (ix - 31)
-	push	hl
-	call	_strncat
-	ld	bc, (ix - 28)
-	pop	hl
-	pop	hl
-	pop	hl
-	jr	BB1_5
 	section	.text,"ax",@progbits
 
 	section	.text,"ax",@progbits
 	public	_main
 _main:
-	ld	hl, -23
+	ld	hl, -50
 	call	__frameset
-	or	a, a
-	sbc	hl, hl
-	ld	(ix - 17), hl
 	ld	iy, -3145600
 	call	_os_ClrLCD
 	call	_os_HomeUp
@@ -136,133 +62,67 @@ _main:
 	ld	hl, _handle_usb_event
 	push	hl
 	call	_usb_Init
-	push	hl
 	pop	de
-	pop	hl
-	pop	hl
-	pop	hl
-	pop	hl
-	push	de
-	pop	hl
+	pop	de
+	pop	de
+	pop	de
 	add	hl, bc
 	or	a, a
 	sbc	hl, bc
-	jp	nz, BB2_9
-	ld	hl, ___const.main.in_buf
-	lea	de, ix - 7
-	lea	iy, ix - 14
-	ld	(ix - 20), de
-	ld	bc, 7
-	ldir
-	ld	(ix - 23), iy
-	lea	de, iy
-	ld	hl, ___const.main.stop
-	ld	bc, 7
-	ldir
-BB2_2:
+	jr	nz, BB1_4
 	call	_kb_Scan
 	call	_usb_HandleEvents
-	ld	a, (_has_srl_device)
+	ld	a, (_has_srl_device_recv)
 	bit	0, a
-	jp	z, BB2_7
-	ld	hl, 0
+	jr	z, BB1_3
+	ld	de, 44
+	ld	hl, _malloc
+	lea	bc, ix - 44
+	ld	(ix - 50), bc
 	push	hl
-	ld	hl, _.str.2
-	push	hl
-	call	_os_GetStringData
-	push	hl
-	pop	iy
-	pop	hl
-	pop	hl
-	ld	hl, (iy)
-	ld	de, 0
-	ld	e, l
-	ld	d, h
 	push	de
-	pea	iy + 2
-	ld	hl, _srl
-	push	hl
-	call	_srl_Write
-	pop	hl
-	pop	hl
-	pop	hl
-	ld	hl, 7
-	push	hl
-	ld	hl, (ix - 20)
-	push	hl
-	ld	hl, _srl
-	push	hl
-	call	_srl_Read
-	pop	hl
-	pop	hl
-	pop	hl
-	ld	hl, (ix - 23)
-	push	hl
-	ld	hl, (ix - 20)
-	push	hl
-	call	_strcmp
+	call	_ti_AllocString
 	pop	de
 	pop	de
-	add	hl, bc
-	or	a, a
-	sbc	hl, bc
-	jr	nz, BB2_5
-	ld	hl, 24
-	push	hl
-	ld	hl, (ix - 20)
-	push	hl
-	ld	hl, _srl
-	push	hl
-	call	_srl_Read
-	pop	hl
-	pop	hl
-	pop	hl
-	ld	hl, (ix - 20)
-	push	hl
-	ld	hl, _.str.3
-	push	hl
-	call	_printf
-	jr	BB2_6
-BB2_5:
-	ld	hl, 6
-	push	hl
-	ld	hl, _.str.4
-	push	hl
-	ld	hl, _srl
-	push	hl
-	call	_srl_Write
-	pop	hl
-BB2_6:
-	pop	hl
-	pop	hl
-BB2_7:
-	call	_kb_Scan
-	ld	hl, -720868
+	ld	(ix - 47), hl
+	ld	de, (ix - 50)
 	push	de
-	ld	e, (hl)
-	inc	hl
-	ld	d, (hl)
-	ld	l, e
-	ld	h, d
-	pop	de
-	ld	a, l
-	bit	6, a
-	jp	z, BB2_2
-	call	_usb_Cleanup
-	jr	BB2_11
-BB2_9:
-	ld	hl, 1
-	ld	(ix - 17), hl
-	ld	(ix - 20), de
-	call	_usb_Cleanup
-	ld	hl, (ix - 20)
 	push	hl
+	call	_assign_string
+	pop	hl
+	pop	hl
+	pea	ix - 47
 	ld	hl, _.str.1
 	push	hl
-	call	_printf
+	ld	hl, 4
+	push	hl
+	call	_ti_SetVar
 	pop	hl
 	pop	hl
-BB2_10:
+	pop	hl
+	ld	hl, 44
+	push	hl
+	ld	hl, (ix - 50)
+	push	hl
+	ld	hl, _srl
+	push	hl
+	call	_srl_Read
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, (ix - 47)
+	push	hl
+	call	_free
+	pop	hl
+BB1_3:
+	call	_kb_Scan
+	call	_usb_Cleanup
+	or	a, a
+	sbc	hl, hl
+	jr	BB1_7
+BB1_4:
+	call	_usb_Cleanup
+BB1_5:
 	call	_kb_Scan
 	ld	hl, -720868
 	push	de
@@ -274,9 +134,9 @@ BB2_10:
 	pop	de
 	ld	a, l
 	bit	6, a
-	jr	z, BB2_10
-BB2_11:
-	ld	hl, (ix - 17)
+	jr	z, BB1_5
+	ld	hl, 1
+BB1_7:
 	ld	sp, ix
 	pop	ix
 	ret
@@ -305,76 +165,72 @@ _handle_usb_event:
 	add	hl, bc
 	or	a, a
 	sbc	hl, bc
-	jp	nz, BB3_17
+	jr	nz, BB2_7
+	ld	iy, _srl
 	ld	de, 1
 	ld	hl, (ix + 6)
 	or	a, a
 	sbc	hl, de
-	jr	nz, BB3_4
+	jr	nz, BB2_5
 	ld	hl, (_srl)
 	ld	de, (ix + 9)
 	or	a, a
 	sbc	hl, de
-	jp	nz, BB3_17
-	ld	hl, _str
-	push	hl
+	jr	nz, BB2_7
+	push	iy
 	ld	(ix - 6), bc
-	call	_puts
-	pop	hl
-	ld	hl, _srl
-	push	hl
 	call	_srl_Close
 	ld	bc, (ix - 6)
 	pop	hl
 	xor	a, a
-	ld	(_has_srl_device), a
-	jp	BB3_17
-BB3_4:
+BB2_4:
+	ld	(_has_srl_device_recv), a
+	jr	BB2_7
+BB2_5:
 	ld	de, 2
 	ld	hl, (ix + 6)
 	or	a, a
 	sbc	hl, de
 	ld	(ix - 6), bc
-	jr	nz, BB3_7
+	jr	nz, BB2_8
 	call	_usb_GetRole
-	ld	bc, (ix - 6)
 	ld	a, l
 	bit	4, a
-	jp	nz, BB3_17
-	ld	hl, _str.10
-	push	hl
-	call	_puts
-	pop	hl
 	ld	hl, (ix + 9)
 	push	hl
-	call	_usb_ResetDevice
-	ld	bc, (ix - 6)
+	call	z, _usb_ResetDevice
 	pop	hl
-	jp	BB3_17
-BB3_7:
+	ld	bc, (ix - 6)
+BB2_7:
+	push	bc
+	pop	hl
+	ld	sp, ix
+	pop	ix
+	ret
+BB2_8:
 	ld	de, 4
 	ld	hl, (ix + 6)
 	or	a, a
 	sbc	hl, de
-	jp	nz, BB3_10
+	jp	nz, BB2_11
 	call	_usb_GetRole
 	ld	iy, _srl
 	ld	bc, (ix - 6)
-	ld	a, (_has_srl_device)
+	ld	a, (_has_srl_device_recv)
 	bit	4, l
-	jp	nz, BB3_17
+	jp	nz, BB2_7
 	or	a, a
-	jr	z, BB3_13
-	jp	BB3_17
-BB3_10:
+	jp	nz, BB2_7
+	jr	BB2_14
+BB2_11:
 	ld	de, 12
 	ld	hl, (ix + 6)
 	or	a, a
 	sbc	hl, de
-	jr	nz, BB3_17
-	ld	a, (_has_srl_device)
+	jp	nz, BB2_7
+	ld	a, (_has_srl_device_recv)
 	bit	0, a
-	jr	nz, BB3_17
+	jp	nz, BB2_7
 	ld	hl, 0
 	ld	de, 8
 	push	de
@@ -390,8 +246,8 @@ BB3_10:
 	add	hl, bc
 	or	a, a
 	sbc	hl, bc
-	jr	z, BB3_17
-BB3_13:
+	jp	z, BB2_7
+BB2_14:
 	ld	hl, _srl_buf
 	ld	de, 512
 	ld	bc, 9600
@@ -404,6 +260,7 @@ BB3_13:
 	push	hl
 	push	iy
 	call	_srl_Open
+	ld	bc, (ix - 6)
 	pop	de
 	pop	de
 	pop	de
@@ -413,39 +270,251 @@ BB3_13:
 	add	hl, bc
 	or	a, a
 	sbc	hl, bc
-	jr	nz, BB3_15
-	ld	hl, _str.9
-	push	hl
-	call	_puts
-	pop	hl
+	jp	nz, BB2_7
 	ld	a, 1
-	ld	(_has_srl_device), a
-	jr	BB3_16
-BB3_15:
-	ld	de, _.str.6
-	push	hl
+	jp	BB2_4
+	section	.text,"ax",@progbits
+
+	section	.text,"ax",@progbits
+	public	_main_send
+_main_send:
+	ld	hl, -141
+	call	__frameset
+	ld	iy, -3145600
+	call	_os_ClrLCD
+	call	_os_HomeUp
+	call	_os_DrawStatusBar
+	call	_srl_GetCDCStandardDescriptors
+	ld	de, 36106
 	push	de
-	call	_printf
+	push	hl
+	ld	hl, 0
+	push	hl
+	ld	hl, _handle_usb_event.1
+	push	hl
+	call	_usb_Init
+	pop	de
+	pop	de
+	pop	de
+	pop	de
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	jr	nz, BB3_3
+	call	_kb_Scan
+	call	_usb_HandleEvents
+	ld	a, (_has_srl_device_send)
+	bit	0, a
+	jr	nz, BB3_6
+	ld	hl, _.str.1
+	ld	de, _.str.2.3
+	push	de
+	push	hl
+	ld	hl, 4
+	push	hl
+	call	_ti_SetVar
+	jr	BB3_7
+BB3_3:
+	call	_usb_Cleanup
+BB3_4:
+	call	_kb_Scan
+	ld	hl, -720868
+	push	de
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)
+	ld	l, e
+	ld	h, d
+	pop	de
+	ld	a, l
+	bit	6, a
+	jr	z, BB3_4
+	ld	hl, 1
+	jr	BB3_8
+BB3_6:
+	ld	hl, _.str.2
+	ld	bc, -138
+	lea	iy, ix
+	add	iy, bc
+	lea	de, iy
+	push	ix
+	ld	bc, -141
+	add	ix, bc
+	ld	(ix), de
+	pop	ix
+	push	de
+	push	hl
+	ld	hl, 4
+	push	hl
+	call	_ti_RclVar
 	pop	hl
 	pop	hl
-BB3_16:
-	ld	bc, (ix - 6)
-BB3_17:
-	push	bc
 	pop	hl
+	ld	hl, 44
+	push	hl
+	ld	bc, -141
+	lea	hl, ix
+	add	hl, bc
+	ld	hl, (hl)
+	push	hl
+	ld	hl, _srl_send
+	push	hl
+	call	_srl_Write
+BB3_7:
+	pop	hl
+	pop	hl
+	pop	hl
+	call	_kb_Scan
+	call	_usb_Cleanup
+	or	a, a
+	sbc	hl, hl
+BB3_8:
 	ld	sp, ix
 	pop	ix
 	ret
 	section	.text,"ax",@progbits
 
+	section	.text,"ax",@progbits
+	private	_handle_usb_event.1
+_handle_usb_event.1:
+	ld	hl, -6
+	call	__frameset
+	ld	bc, (ix + 6)
+	ld	de, (ix + 9)
+	ld	hl, (ix + 12)
+	push	hl
+	ld	(ix - 3), de
+	push	de
+	push	bc
+	call	_srl_UsbEventCallback
+	push	hl
+	pop	bc
+	pop	hl
+	pop	hl
+	pop	hl
+	push	bc
+	pop	hl
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	jr	nz, BB4_7
+	ld	iy, _srl_send
+	ld	de, 1
+	ld	hl, (ix + 6)
+	or	a, a
+	sbc	hl, de
+	jr	nz, BB4_5
+	ld	hl, (_srl_send)
+	ld	de, (ix + 9)
+	or	a, a
+	sbc	hl, de
+	jr	nz, BB4_7
+	push	iy
+	ld	(ix - 6), bc
+	call	_srl_Close
+	ld	bc, (ix - 6)
+	pop	hl
+	xor	a, a
+BB4_4:
+	ld	(_has_srl_device_send), a
+	jr	BB4_7
+BB4_5:
+	ld	de, 2
+	ld	hl, (ix + 6)
+	or	a, a
+	sbc	hl, de
+	ld	(ix - 6), bc
+	jr	nz, BB4_8
+	call	_usb_GetRole
+	ld	a, l
+	bit	4, a
+	ld	hl, (ix + 9)
+	push	hl
+	call	z, _usb_ResetDevice
+	pop	hl
+	ld	bc, (ix - 6)
+BB4_7:
+	push	bc
+	pop	hl
+	ld	sp, ix
+	pop	ix
+	ret
+BB4_8:
+	ld	de, 4
+	ld	hl, (ix + 6)
+	or	a, a
+	sbc	hl, de
+	jp	nz, BB4_11
+	call	_usb_GetRole
+	ld	iy, _srl_send
+	ld	bc, (ix - 6)
+	ld	a, (_has_srl_device_send)
+	bit	4, l
+	jp	nz, BB4_7
+	or	a, a
+	jp	nz, BB4_7
+	jr	BB4_14
+BB4_11:
+	ld	de, 12
+	ld	hl, (ix + 6)
+	or	a, a
+	sbc	hl, de
+	jp	nz, BB4_7
+	ld	a, (_has_srl_device_send)
+	bit	0, a
+	jp	nz, BB4_7
+	ld	hl, 0
+	ld	de, 8
+	push	de
+	push	hl
+	push	hl
+	call	_usb_FindDevice
+	ld	iy, _srl_send
+	ld	bc, (ix - 6)
+	pop	de
+	pop	de
+	pop	de
+	ld	(ix - 3), hl
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	jp	z, BB4_7
+BB4_14:
+	ld	hl, _srl_buf_send
+	ld	de, 512
+	ld	bc, 9600
+	push	bc
+	ld	bc, -1
+	push	bc
+	push	de
+	push	hl
+	ld	hl, (ix - 3)
+	push	hl
+	push	iy
+	call	_srl_Open
+	ld	bc, (ix - 6)
+	pop	de
+	pop	de
+	pop	de
+	pop	de
+	pop	de
+	pop	de
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	jp	nz, BB4_7
+	ld	a, 1
+	jp	BB4_4
+	section	.text,"ax",@progbits
+
 	section	.bss,"aw",@nobits
-	public	_has_srl_device
-_has_srl_device:
+	public	_has_srl_device_recv
+_has_srl_device_recv:
 	rb	1
 
 	section	.data,"aw",@progbits
-	public	_EOFstr
-_EOFstr:
+	public	_EOFstr_recv
+_EOFstr_recv:
 	db	10, 0
 
 	section	.bss,"aw",@nobits
@@ -453,85 +522,66 @@ _EOFstr:
 _srl:
 	rb	58
 
-	section	.rodata,"a",@progbits
-	private	_.str.1
-_.str.1:
-	db	"usb init error %u", 10, 0
-
-	section	.rodata,"a",@progbits
-	private	___const.main.in_buf
-___const.main.in_buf:
-	db	"     ", 0, 0
-
-	section	.rodata,"a",@progbits
-	private	___const.main.stop
-___const.main.stop:
-	db	"stop", 0, 0, 0
-
-	section	.rodata,"a",@progbits
-	private	_.str.2
-_.str.2:
-	db	"ª", 0, 0, 0
-
-	section	.rodata,"a",@progbits
-	private	_.str.3
-_.str.3:
-	db	"%s", 0
-
-	section	.rodata,"a",@progbits
-	private	_.str.4
-_.str.4:
-	db	"-ack", 0, 0
-
 	section	.bss,"aw",@nobits
 	public	_srl_buf
 _srl_buf:
 	rb	512
 
-	section	.rodata,"a",@progbits
-	private	_.str.6
-_.str.6:
-	db	"Error %d initting serial", 10, 0
+	section	.bss,"aw",@nobits
+	public	_has_srl_device_send
+_has_srl_device_send:
+	rb	1
 
 	section	.rodata,"a",@progbits
-	private	_str
-_str:
-	db	"device disconnected", 0
+	private	_.str.2
+_.str.2:
+	db	"ª	", 0, 0
+
+	section	.bss,"aw",@nobits
+	public	_srl_send
+_srl_send:
+	rb	58
 
 	section	.rodata,"a",@progbits
-	private	_str.9
-_str.9:
-	db	"serial initialized", 0
+	private	_.str.1
+_.str.1:
+	db	"ª", 0, 0, 0
 
 	section	.rodata,"a",@progbits
-	private	_str.10
-_str.10:
-	db	"device connected", 0
+	private	_.str.2.3
+_.str.2.3:
+	db	"FAIL (1)", 0
+
+	section	.bss,"aw",@nobits
+	public	_srl_buf_send
+_srl_buf_send:
+	rb	512
 
 	ident	"clang version 15.0.0 (https://github.com/jacobly0/llvm-project 5f8512f22751066573aa48ac848a6d2195838ac3)"
 	ident	"clang version 15.0.0 (https://github.com/jacobly0/llvm-project 5f8512f22751066573aa48ac848a6d2195838ac3)"
 	extern	_srl_Open
 	extern	__Unwind_SjLj_Register
 	extern	__frameset
+	extern	_malloc
 	extern	_usb_FindDevice
 	extern	_srl_Write
 	extern	_usb_ResetDevice
 	extern	_srl_GetCDCStandardDescriptors
 	extern	_srl_Close
 	extern	_kb_Scan
-	extern	_os_GetStringData
-	extern	_strcmp
 	extern	_os_ClrLCD
-	extern	_strncat
 	extern	_os_DrawStatusBar
+	extern	_ti_SetVar
 	extern	_usb_HandleEvents
-	extern	_puts
+	extern	_strlen
 	extern	_usb_GetRole
 	extern	__setflag
 	extern	__Unwind_SjLj_Unregister
-	extern	_printf
+	extern	_ti_AllocString
+	extern	_ti_RclVar
 	extern	_srl_UsbEventCallback
 	extern	_srl_Read
+	extern	_free
 	extern	_os_HomeUp
 	extern	_usb_Cleanup
 	extern	_usb_Init

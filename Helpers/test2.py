@@ -1,4 +1,4 @@
-from serrecv import Talker
+from COMMS.Helpers.serrecv import Talker
 
 t = Talker()
 

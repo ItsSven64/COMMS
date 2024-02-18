@@ -1,0 +1,6 @@
+ERROR CODES FOR COMMS
+-gets outputted in str1-
+
+0 - Succesful (may not appear)
+1 - No Serial device connected
+2 - Unknown Serial library error
